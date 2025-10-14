@@ -20,7 +20,7 @@ class Produto(SQLModel, table=True):
 class Database:
     """Gerencia a conexão e as operações CRUD com o banco de dados."""
 
-    def __init__(self, db_url: str = "sqlite:///./app.db"):
+    def __init__(self, db_url: str = "sqlite:///./wsorg.db"):
         self.engine = create_engine(
             db_url, connect_args={"check_same_thread": False}
         )

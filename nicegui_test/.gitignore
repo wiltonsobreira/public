@@ -213,5 +213,5 @@ bkp*
 output_files
 
 # sqlite db
-app.db-shm
-app.db-wal
+wsorg.db-shm
+wsorg.db-wal
