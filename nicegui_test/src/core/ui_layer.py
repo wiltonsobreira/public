@@ -2,19 +2,26 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from nicegui import ui, events
+from nicegui import events, ui
 from sqlmodel import SQLModel
 
-from data_layer import Database, Produto
+from data_layer import Database
 
 
-class ProductCatalogUI:
-    """Constrói e gerencia a interface do usuário para o catálogo de produtos."""
+class GenericCatalogUI:
+    """Constrói e gerencia uma interface de usuário genérica para um modelo SQLModel."""
 
     def __init__(self, db: Database, model: type[SQLModel]):
         self.db = db
         self.model = model
         self.input_fields: dict[str, ui.input] = {}
+
+        # Acessa os metadados da tabela para encontrar a(s) chave(s) primária(s)
+        pk_cols = self.model.__table__.primary_key.columns
+        if not pk_cols:
+            raise ValueError(f"O modelo {model.__name__} não possui chave primária.")
+        # Pega o nome da primeira coluna da chave primária
+        self.primary_key_field = list(pk_cols)[0].name
 
         self._setup_ui()
 
@@ -23,7 +30,7 @@ class ProductCatalogUI:
         ui.dark_mode().enable()
 
         with ui.row().classes("items-center justify-between w-full"):
-            ui.label("Catálogo de Produtos").classes("text-2xl font-bold")
+            ui.label(f"Catálogo de {self.model.__name__}s").classes("text-2xl font-bold")
             self.status_label = ui.label("").classes("text-sm opacity-80")
 
         self.grid = self._create_grid()
@@ -34,7 +41,7 @@ class ProductCatalogUI:
         col_defs = self._generate_col_defs()
         grid_options = {
             "columnDefs": col_defs,
-            "rowData": self.db.get_all_products(),
+            "rowData": self.db.get_all(self.model),
             "rowSelection": "multiple",
             "animateRows": True,
             "defaultColDef": {"resizable": True, "sortable": True, "filter": True},
@@ -52,15 +59,16 @@ class ProductCatalogUI:
     def _generate_col_defs(self) -> list[dict[str, Any]]:
         """Gera definições de coluna para a AG Grid a partir dos campos do modelo."""
         col_defs = []
+        pk_name = self.primary_key_field
         for name, field_info in self.model.model_fields.items():
             col_def = {
-                "headerName": name.capitalize(),
+                "headerName": name.replace("_", " ").capitalize(),
                 "field": name,
-                "editable": name != "id",  # O campo 'id' não é editável
+                "editable": name != pk_name,
             }
-            if name == "id":
-                col_def["width"] = 90
-            if field_info.annotation == float or field_info.annotation == int:
+            if name == pk_name:
+                col_def["width"] = 150
+            if field_info.annotation in (float, int):
                 col_def["filter"] = "agNumberColumnFilter"
             col_defs.append(col_def)
         return col_defs
@@ -68,12 +76,12 @@ class ProductCatalogUI:
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
         with ui.row().classes("gap-2 my-2"):
-            # Gera campos de input dinamicamente, exceto para 'id'
-            for name, field_info in self.model.model_fields.items():
-                if name != "id":
-                    self.input_fields[name] = ui.input(label=name.capitalize()).classes(
-                        "w-56"
-                    )
+            # Gera campos de input dinamicamente, exceto para a PK e timestamps
+            for name, _ in self.model.model_fields.items():
+                if name != self.primary_key_field and "ts_" not in name:
+                    self.input_fields[name] = ui.input(
+                        label=name.replace("_", " ").capitalize()
+                    ).classes("w-56")
 
             ui.button("Adicionar", on_click=self._add_row, color="primary")
             ui.button(
@@ -83,59 +91,70 @@ class ProductCatalogUI:
 
     def refresh_grid(self):
         """Atualiza os dados da grid buscando do banco."""
-        self.grid.options["rowData"] = self.db.get_all_products()
+        self.grid.options["rowData"] = self.db.get_all(self.model)
         self.grid.update()
         self.status_label.set_text("Dados atualizados")
 
     async def _add_row(self):
-        """Adiciona um novo produto ao banco de dados."""
+        """Adiciona um novo registro ao banco de dados."""
         try:
-            product_data = {}
+            data = {}
             for name, field in self.input_fields.items():
                 value = cast(str, field.value or "").strip()
-                if not value:
+                field_info = self.model.model_fields[name]
+
+                # Permite valores vazios para campos opcionais
+                if not value and not field_info.is_required():
+                    data[name] = None
+                    continue
+
+                if not value and field_info.is_required():
                     await ui.notify(f"O campo '{name}' é obrigatório.", color="negative")
                     return
 
                 # Converte o tipo se necessário
-                field_type = self.model.model_fields[name].annotation
-                product_data[name] = field_type(value)
+                field_type = field_info.annotation
+                data[name] = field_type(value) if field_type else value
 
             with self.db.get_session() as session:
-                new_product = self.model(**product_data)
-                session.add(new_product)
+                new_item = self.model(**data)
+                session.add(new_item)
                 self.db.commit_session(session)
 
             self.refresh_grid()
-            await ui.notify("Produto adicionado.", color="positive")
+            await ui.notify("Registro adicionado.", color="positive")
             for field in self.input_fields.values():
                 field.value = ""
-        except (ValueError, TypeError):
-            await ui.notify("Verifique os valores. Preço deve ser um número.", color="negative")
+        except (ValueError, TypeError) as e:
+            await ui.notify(f"Verifique os valores. Erro: {e}", color="negative")
         except Exception as ex:
             await ui.notify(f"Erro ao adicionar: {ex}", color="negative")
 
     async def _delete_selected(self):
-        """Exclui os produtos selecionados na grid."""
+        """Exclui os registros selecionados na grid."""
         try:
             selected_rows = await self.grid.get_selected_rows()
             if not selected_rows:
                 await ui.notify("Selecione ao menos um registro.", color="negative")
                 return
 
-            ids_to_delete = [row["id"] for row in selected_rows if "id" in row]
+            ids_to_delete = [
+                row[self.primary_key_field]
+                for row in selected_rows
+                if self.primary_key_field in row
+            ]
             if not ids_to_delete:
                 return
 
             with self.db.get_session() as session:
-                for product_id in ids_to_delete:
-                    product = session.get(self.model, product_id)
-                    if product:
-                        session.delete(product)
+                for item_id in ids_to_delete:
+                    item = session.get(self.model, item_id)
+                    if item:
+                        session.delete(item)
                 self.db.commit_session(session)
 
             self.refresh_grid()
-            await ui.notify(f"Excluídos: {len(ids_to_delete)} produto(s).", color="positive")
+            await ui.notify(f"Excluídos: {len(ids_to_delete)} registro(s).", color="positive")
         except Exception as ex:
             await ui.notify(f"Erro ao excluir: {ex}", color="negative")
 
@@ -148,7 +167,7 @@ class ProductCatalogUI:
             new_value = e.args["newValue"]
             old_value = e.args["oldValue"]
 
-            if not field or "id" not in row:
+            if not field or self.primary_key_field not in row:
                 await ui.notify("Evento inválido: campo ou id ausente.", color="negative")
                 return
 
@@ -165,14 +184,14 @@ class ProductCatalogUI:
                 return
 
             with self.db.get_session() as session:
-                product = session.get(self.model, row["id"])
-                if not product:
+                item = session.get(self.model, row[self.primary_key_field])
+                if not item:
                     await ui.notify("Registro não encontrado.", color="negative")
                     self.refresh_grid()
                     return
 
-                setattr(product, field, new_value)
-                session.add(product)
+                setattr(item, field, new_value)
+                session.add(item)
                 self.db.commit_session(session)
 
             await ui.notify(f"Salvo: {field} = {new_value}", color="positive")

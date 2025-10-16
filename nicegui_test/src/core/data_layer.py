@@ -1,20 +1,33 @@
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from typing import Any, Type
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlalchemy import Column, DateTime
+from sqlmodel import Field, Session, SQLModel, create_engine, select, text
 
 
-class Produto(SQLModel, table=True):
-    """Define o modelo de dados para um Produto."""
+class Bookmark(SQLModel, table=True):
+    """Define o modelo de dados para um Bookmark."""
 
-    __tablename__ = "produto"
+    __tablename__ = "bookmark"
     __table_args__ = {"extend_existing": True}
 
-    id: int | None = Field(default=None, primary_key=True)
-    nome: str = Field(index=True)
-    categoria: str
-    preco: float
+    nm_bookmark: str = Field(primary_key=True)
+    ds_bookmark: str | None = Field(default=None)
+    gp_bookmark: str | None = Field(default=None, index=True)
+    sbgp_bookmark: str | None = Field(default=None, index=True)
+    url_bookmark: str
+    ts_created: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")),
+    )
+    ts_updated: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(
+            DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now
+        ),
+    )
 
 
 class Database:
@@ -43,26 +56,32 @@ class Database:
     def seed_if_empty(self):
         """Popula o banco com dados iniciais se estiver vazio."""
         with self.get_session() as session:
-            if not session.exec(select(Produto)).first():
+            if not session.exec(select(Bookmark)).first():
                 session.add_all(
                     [
-                        Produto(nome="Teclado", categoria="Periférico", preco=199.9),
-                        Produto(nome="Mouse", categoria="Periférico", preco=99.9),
-                        Produto(nome="Monitor", categoria="Vídeo", preco=1299.0),
+                        Bookmark(
+                            nm_bookmark="NiceGUI",
+                            ds_bookmark="Framework UI em Python",
+                            gp_bookmark="Develop",
+                            sbgp_bookmark="Python",
+                            url_bookmark="https://nicegui.io/",
+                        ),
+                        Bookmark(
+                            nm_bookmark="SQLModel",
+                            ds_bookmark="ORM Pythonic",
+                            gp_bookmark="Develop",
+                            sbgp_bookmark="Python",
+                            url_bookmark="https://sqlmodel.tiangolo.com/",
+                        ),
                     ]
                 )
                 session.commit()
 
-    def get_all_products(self) -> list[dict[str, Any]]:
-        """Busca todos os produtos e os retorna como dicionários."""
+    def get_all(self, model: Type[SQLModel]) -> list[dict[str, Any]]:
+        """Busca todos os registros de um modelo e os retorna como dicionários."""
         with self.get_session() as session:
-            produtos = session.exec(select(Produto)).all()
-            return [p.model_dump() for p in produtos]
-
-    def get_product(self, product_id: int) -> Produto | None:
-        """Busca um produto pelo seu ID."""
-        with self.get_session() as session:
-            return session.get(Produto, product_id)
+            items = session.exec(select(model)).all()
+            return [item.model_dump() for item in items]
 
     def commit_session(self, session: Session):
         """Realiza o commit de uma sessão."""
