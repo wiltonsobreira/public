@@ -38,15 +38,28 @@ class GenericCatalogUI:
 
     def _create_grid(self) -> ui.aggrid:
         """Cria e configura a AG Grid dinamicamente a partir do modelo."""
+        # Prepara as definições de coluna e os dados.
         col_defs = self._generate_col_defs()
+        rows = self._get_formatted_rows()
+
+        # Encontra o índice da coluna de URL para passar para html_columns.
+        try:
+            url_col_index = next(i for i, col in enumerate(col_defs) if col["field"] == "url_bookmark")
+        except StopIteration:
+            url_col_index = -1 # Coluna não encontrada
+
         grid_options = {
             "columnDefs": col_defs,
-            "rowData": self.db.get_all(self.model),
+            "rowData": rows,
             "rowSelection": "multiple",
             "animateRows": True,
             "defaultColDef": {"resizable": True, "sortable": True, "filter": True},
         }
-        grid = ui.aggrid(grid_options).classes("w-full")
+
+        # Usa o argumento `html_columns` para instruir a grade a renderizar HTML.
+        html_columns = [url_col_index] if url_col_index != -1 else []
+        grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full")
+
         grid.on(
             "cellValueChanged",
             self._on_cell_value_changed,
@@ -68,10 +81,7 @@ class GenericCatalogUI:
             }
             if name == pk_name:
                 col_def["width"] = 150
-            if name == "url_bookmark":
-                # Usa um renderizador inline. O prefixo '!!' instrui o NiceGUI
-                # a tratar a string como uma função JavaScript executável.
-                col_def["cellRenderer"] = "!!(params) => `<a href='${params.value}' target='_blank' rel='noopener noreferrer'>${params.value}</a>`"
+            # A renderização do link agora é tratada por `html_columns`, não precisamos mais de cellRenderer.
 
             if field_info.annotation in (float, int):
                 col_def["filter"] = "agNumberColumnFilter"
@@ -96,9 +106,19 @@ class GenericCatalogUI:
 
     def refresh_grid(self):
         """Atualiza os dados da grid buscando do banco."""
-        self.grid.options["rowData"] = self.db.get_all(self.model)
+        self.grid.options["rowData"] = self._get_formatted_rows()
         self.grid.update()
         self.status_label.set_text("Dados atualizados")
+
+    def _get_formatted_rows(self) -> list[dict[str, Any]]:
+        """Busca os dados e formata a coluna de URL para conter uma tag HTML."""
+        rows = self.db.get_all(self.model)
+        for row in rows:
+            # Verifica se a linha tem a chave 'url_bookmark' e se o valor não é nulo.
+            if url := row.get("url_bookmark"):
+                # Substitui a URL pura pela tag <a> completa.
+                row["url_bookmark"] = f'<a href="{url}" target="_blank" rel="noopener noreferrer">{url}</a>'
+        return rows
 
     async def _add_row(self):
         """Adiciona um novo registro ao banco de dados."""
