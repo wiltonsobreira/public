@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, cast, get_args, get_origin
 
 from nicegui import events, ui
 from sqlmodel import SQLModel
@@ -113,18 +113,17 @@ class GenericCatalogUI:
                     return
 
                 # Converte o tipo se necessário
-                field_type = field_info.annotation
-                data[name] = field_type(value) if field_type else value
+                data[name] = self._convert_type(value, field_info.annotation)
 
             with self.db.get_session() as session:
                 new_item = self.model(**data)
                 session.add(new_item)
                 self.db.commit_session(session)
 
-            self.refresh_grid()
             await ui.notify("Registro adicionado.", color="positive")
             for field in self.input_fields.values():
                 field.value = ""
+            self.refresh_grid()
         except (ValueError, TypeError) as e:
             await ui.notify(f"Verifique os valores. Erro: {e}", color="negative")
         except Exception as ex:
@@ -176,12 +175,7 @@ class GenericCatalogUI:
 
             # Converte o tipo se necessário
             field_type = self.model.model_fields[field].annotation
-            try:
-                new_value = field_type(new_value)
-            except (ValueError, TypeError):
-                await ui.notify(f"Valor inválido para '{field}'. Alteração revertida.", color="negative")
-                self.refresh_grid()
-                return
+            new_value = self._convert_type(new_value, field_type)
 
             # Lógica para lidar com a atualização da chave primária
             if field == self.primary_key_field:
@@ -215,3 +209,21 @@ class GenericCatalogUI:
         except Exception as ex:
             await ui.notify(f"Erro ao salvar: {ex}", color="negative")
             self.refresh_grid()
+
+    @staticmethod
+    def _convert_type(value: Any, target_type: Any) -> Any:
+        """Converte um valor para o tipo de destino, lidando com tipos Union (opcionais)."""
+        if value is None:
+            return None
+
+        # Se o tipo for uma união (ex: str | None), extrai os tipos base
+        if get_origin(target_type) is not None:
+            # Pega os tipos dentro da Union, ex: (str, NoneType)
+            base_types = [t for t in get_args(target_type) if t is not type(None)]
+            if base_types:
+                # Usa o primeiro tipo não-None para a conversão
+                return base_types[0](value)
+            return value  # Se não houver tipo base, retorna o valor como está
+
+        # Se não for uma união, converte diretamente
+        return target_type(value)
