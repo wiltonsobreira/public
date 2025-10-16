@@ -64,7 +64,7 @@ class GenericCatalogUI:
             col_def = {
                 "headerName": name.replace("_", " ").capitalize(),
                 "field": name,
-                "editable": name != pk_name,
+                "editable": "ts_" not in name,  # Torna todos os campos, exceto timestamps, editáveis
             }
             if name == pk_name:
                 col_def["width"] = 150
@@ -76,9 +76,9 @@ class GenericCatalogUI:
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
         with ui.row().classes("gap-2 my-2"):
-            # Gera campos de input dinamicamente, exceto para a PK e timestamps
+            # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
-                if name != self.primary_key_field and "ts_" not in name:
+                if "ts_" not in name:
                     self.input_fields[name] = ui.input(
                         label=name.replace("_", " ").capitalize()
                     ).classes("w-56")
@@ -183,18 +183,35 @@ class GenericCatalogUI:
                 self.refresh_grid()
                 return
 
-            with self.db.get_session() as session:
-                item = session.get(self.model, row[self.primary_key_field])
-                if not item:
-                    await ui.notify("Registro não encontrado.", color="negative")
-                    self.refresh_grid()
-                    return
+            # Lógica para lidar com a atualização da chave primária
+            if field == self.primary_key_field:
+                with self.db.get_session() as session:
+                    # Exclui o registro antigo
+                    old_item = session.get(self.model, old_value)
+                    if old_item:
+                        session.delete(old_item)
 
-                setattr(item, field, new_value)
-                session.add(item)
-                self.db.commit_session(session)
+                    # Cria um novo registro com a nova PK
+                    new_data = row.copy()
+                    new_data[self.primary_key_field] = new_value
+                    new_item = self.model(**new_data)
+                    session.add(new_item)
+                    self.db.commit_session(session)
+                await ui.notify(f"Chave primária atualizada para: {new_value}", color="positive")
+                self.refresh_grid()
+            else:
+                # Lógica para atualizar outros campos
+                with self.db.get_session() as session:
+                    item = session.get(self.model, row[self.primary_key_field])
+                    if not item:
+                        await ui.notify("Registro não encontrado.", color="negative")
+                        self.refresh_grid()
+                        return
 
-            await ui.notify(f"Salvo: {field} = {new_value}", color="positive")
+                    setattr(item, field, new_value)
+                    session.add(item)
+                    self.db.commit_session(session)
+                await ui.notify(f"Salvo: {field} = {new_value}", color="positive")
         except Exception as ex:
             await ui.notify(f"Erro ao salvar: {ex}", color="negative")
             self.refresh_grid()
