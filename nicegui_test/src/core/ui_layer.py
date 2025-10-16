@@ -120,12 +120,12 @@ class GenericCatalogUI:
                 session.add(new_item)
                 self.db.commit_session(session)
 
-            await ui.notify("Registro adicionado.", color="positive")
             for field in self.input_fields.values():
                 field.value = ""
             self.refresh_grid()
+            await ui.notify("Registro adicionado.", color="positive")
         except (ValueError, TypeError) as e:
-            await ui.notify(f"Verifique os valores. Erro: {e}", color="negative")
+            await ui.notify(f"Verifique os valores. Erro: {e}", color="negative") # type: ignore
         except Exception as ex:
             await ui.notify(f"Erro ao adicionar: {ex}", color="negative")
 
@@ -188,6 +188,10 @@ class GenericCatalogUI:
                     # Cria um novo registro com a nova PK
                     new_data = row.copy()
                     new_data[self.primary_key_field] = new_value
+                    # Remove os campos de timestamp, pois eles serão gerados automaticamente
+                    # pelo banco de dados para o novo registro.
+                    new_data.pop("ts_created", None)
+                    new_data.pop("ts_updated", None)
                     new_item = self.model(**new_data)
                     session.add(new_item)
                     self.db.commit_session(session)
