@@ -30,7 +30,7 @@ class GenericCatalogUI:
         ui.dark_mode().enable()
 
         with ui.row().classes("items-center justify-between w-full"):
-            ui.label(f"Catálogo de {self.model.__name__}s").classes("text-2xl font-bold")
+            ui.label(f"{self.model.__name__}s").classes("text-2xl font-bold")
             self.status_label = ui.label("").classes("text-sm opacity-80")
 
         self.grid = self._create_grid()
@@ -68,6 +68,11 @@ class GenericCatalogUI:
             }
             if name == pk_name:
                 col_def["width"] = 150
+            if name == "url_bookmark":
+                # Usa um renderizador inline. O prefixo '!!' instrui o NiceGUI
+                # a tratar a string como uma função JavaScript executável.
+                col_def["cellRenderer"] = "!!(params) => `<a href='${params.value}' target='_blank' rel='noopener noreferrer'>${params.value}</a>`"
+
             if field_info.annotation in (float, int):
                 col_def["filter"] = "agNumberColumnFilter"
             col_defs.append(col_def)
