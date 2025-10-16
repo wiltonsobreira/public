@@ -58,7 +58,7 @@ class GenericCatalogUI:
 
         # Usa o argumento `html_columns` para instruir a grade a renderizar HTML.
         html_columns = [url_col_index] if url_col_index != -1 else []
-        grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full")
+        grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full h-[90vh]") # 90vh é valor percentual da tela verticalmente 
 
         grid.on(
             "cellValueChanged",
