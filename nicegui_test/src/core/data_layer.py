@@ -15,8 +15,10 @@ class Bookmark(SQLModel, table=True):
 
     nm_bookmark: str = Field(primary_key=True)
     ds_bookmark: str | None = Field(default=None)
-    gp_bookmark: str | None = Field(default=None, index=True)
-    sbgp_bookmark: str | None = Field(default=None, index=True)
+    nm_grouping: str | None = Field(default=None, index=True)
+    nm_group_bookmark: str | None = Field(default=None, index=True)
+    nm_subgroup_bookmark: str | None = Field(default=None, index=True)
+    nm_tag: str | None = Field(default=None, index=True)
     url_bookmark: str
     ts_created: datetime = Field(
         default_factory=datetime.now,
@@ -62,15 +64,19 @@ class Database:
                         Bookmark(
                             nm_bookmark="NiceGUI",
                             ds_bookmark="Framework UI em Python",
-                            gp_bookmark="Develop",
-                            sbgp_bookmark="Python",
+                            nm_grouping="Framework",
+                            nm_group_bookmark="Develop",
+                            nm_subgroup_bookmark="Python",
+                            nm_tag="UI",
                             url_bookmark="https://nicegui.io/",
                         ),
                         Bookmark(
                             nm_bookmark="SQLModel",
                             ds_bookmark="ORM Pythonic",
-                            gp_bookmark="Develop",
-                            sbgp_bookmark="Python",
+                            nm_grouping="ORM",
+                            nm_group_bookmark="Develop",
+                            nm_subgroup_bookmark="Python",
+                            nm_tag="Database",
                             url_bookmark="https://sqlmodel.tiangolo.com/",
                         ),
                     ]
