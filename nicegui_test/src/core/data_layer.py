@@ -33,6 +33,25 @@ class Bookmark(SQLModel, table=True):
         ),
     )
 
+class TypeBookmark(SQLModel, table=True):
+    """Define o modelo para os tipos de bookmark (tabela de lookup)."""
+    __tablename__ = "tc_type_bookmark"
+    __table_args__ = {"extend_existing": True}
+
+    nm_type_bookmark: str = Field(primary_key=True)
+    ts_created: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
+    ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
+
+
+class SubtypeBookmark(SQLModel, table=True):
+    """Define o modelo para os subtipos de bookmark (tabela de lookup)."""
+    __tablename__ = "tc_subtype_bookmark"
+    __table_args__ = {"extend_existing": True}
+
+    nm_subtype_bookmark: str = Field(primary_key=True)
+    ts_created: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
+    ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
+
 
 class Database:
     """Gerencia a conexão e as operações CRUD com o banco de dados."""
@@ -60,7 +79,7 @@ class Database:
     def seed_if_empty(self):
         """Popula o banco com dados iniciais se estiver vazio."""
         with self.get_session() as session:
-            if not session.exec(select(Bookmark)).first():
+            if not session.exec(select(Bookmark)).first():  # Popula bookmarks
                 session.add_all(
                     [
                         Bookmark(
@@ -87,13 +106,44 @@ class Database:
                         ),
                     ]
                 )
-                session.commit()
+
+            if not session.exec(select(TypeBookmark)).first():  # Popula tipos
+                session.add_all([
+                    TypeBookmark(nm_type_bookmark='article'),
+                    TypeBookmark(nm_type_bookmark='audio'),
+                    TypeBookmark(nm_type_bookmark='git'),
+                    TypeBookmark(nm_type_bookmark='social_media'),
+                    TypeBookmark(nm_type_bookmark='video'),
+                    TypeBookmark(nm_type_bookmark='website'),
+                    TypeBookmark(nm_type_bookmark='file'),
+                ])
+
+            if not session.exec(select(SubtypeBookmark)).first():  # Popula subtipos
+                session.add_all([
+                    SubtypeBookmark(nm_subtype_bookmark='channel'),
+                    SubtypeBookmark(nm_subtype_bookmark='file'),
+                    SubtypeBookmark(nm_subtype_bookmark='playlist'),
+                    SubtypeBookmark(nm_subtype_bookmark='page'),
+                    SubtypeBookmark(nm_subtype_bookmark='repository'),
+                    SubtypeBookmark(nm_subtype_bookmark='post'),
+                    SubtypeBookmark(nm_subtype_bookmark='profile'),
+                    SubtypeBookmark(nm_subtype_bookmark='domain'),
+                ])
+
+            session.commit()
 
     def get_all(self, model: Type[SQLModel]) -> list[dict[str, Any]]:
         """Busca todos os registros de um modelo e os retorna como dicionários."""
         with self.get_session() as session:
             items = session.exec(select(model)).all()
             return [item.model_dump() for item in items]
+
+    def get_all_from_column(self, model: Type[SQLModel], column_name: str) -> list[str]:
+        """Busca todos os valores de uma coluna específica de um modelo."""
+        with self.get_session() as session:
+            column = getattr(model, column_name)
+            statement = select(column).order_by(column)
+            return session.exec(statement).all()
 
     def commit_session(self, session: Session):
         """Realiza o commit de uma sessão."""
