@@ -218,3 +218,4 @@ version_*
 # sqlite db
 wsorg.db-shm
 wsorg.db-wal
+wsorg_bkp_*

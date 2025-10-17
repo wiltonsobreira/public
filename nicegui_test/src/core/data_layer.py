@@ -10,11 +10,13 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select, text
 class Bookmark(SQLModel, table=True):
     """Define o modelo de dados para um Bookmark."""
 
-    __tablename__ = "bookmark"
+    __tablename__ = "tm_bookmark"
     __table_args__ = {"extend_existing": True}
 
     nm_bookmark: str = Field(primary_key=True)
     ds_bookmark: str | None = Field(default=None)
+    nm_type_bookmark: str | None = Field(default=None, index=True)
+    nm_subtype_bookmark: str | None = Field(default=None, index=True)    
     nm_grouping: str | None = Field(default=None, index=True)
     nm_group_bookmark: str | None = Field(default=None, index=True)
     nm_subgroup_bookmark: str | None = Field(default=None, index=True)
@@ -64,6 +66,8 @@ class Database:
                         Bookmark(
                             nm_bookmark="NiceGUI",
                             ds_bookmark="Framework UI em Python",
+                            nm_type_bookmark="website",
+                            nm_subtype_bookmark="page",
                             nm_grouping="Framework",
                             nm_group_bookmark="Develop",
                             nm_subgroup_bookmark="Python",
@@ -73,6 +77,8 @@ class Database:
                         Bookmark(
                             nm_bookmark="SQLModel",
                             ds_bookmark="ORM Pythonic",
+                            nm_type_bookmark="website",
+                            nm_subtype_bookmark="page",                            
                             nm_grouping="ORM",
                             nm_group_bookmark="Develop",
                             nm_subgroup_bookmark="Python",
