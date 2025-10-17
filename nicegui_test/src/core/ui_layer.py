@@ -8,6 +8,21 @@ from sqlmodel import SQLModel, Field
 
 from data_layer import Database
 
+# Dicionário para mapear nomes de campos internos para rótulos amigáveis.
+FIELD_LABELS = {
+    "nm_bookmark": "nm_bookmark",
+    "ds_bookmark": "ds_bookmark",
+    "nm_type_bookmark": "type",
+    "nm_subtype_bookmark": "subtype",
+    "nm_grouping": "grouping",
+    "nm_group_bookmark": "group",
+    "nm_subgroup_bookmark": "subgroup",
+    "nm_tag": "tag",
+    "url_bookmark": "url",
+    "ts_created": "ts_created",
+    "ts_updated": "ts_updated",
+}
+
 
 class GenericCatalogUI:
     """Constrói e gerencia uma interface de usuário genérica para um modelo SQLModel."""
@@ -63,8 +78,9 @@ class GenericCatalogUI:
         col_defs = []
         pk_name = self.primary_key_field
         for name, field_info in self.model.model_fields.items():
+            display_name = FIELD_LABELS.get(name, name.replace("_", " ").capitalize())
             col_def = {
-                "headerName": name.replace("_", " ").capitalize(),
+                "headerName": display_name,
                 "field": name,
                 "editable": "ts_" not in name,  # Torna todos os campos, exceto timestamps, editáveis
             }
@@ -101,7 +117,7 @@ class GenericCatalogUI:
             # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
                 if "ts_" not in name:
-                    label = name.replace("_", " ").capitalize()
+                    label = FIELD_LABELS.get(name, name.replace("_", " ").capitalize())
                     if name == "nm_type_bookmark":
                         self.input_fields[name] = ui.select(
                             options=self.type_options, label=label

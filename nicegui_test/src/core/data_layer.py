@@ -13,10 +13,10 @@ class Bookmark(SQLModel, table=True):
     __tablename__ = "tm_bookmark"
     __table_args__ = {"extend_existing": True}
 
-    nm_bookmark: str = Field(index=True) # Não é mais PK, mas um índice é bom para buscas.
-    ds_bookmark: str | None = Field(default=None)
     nm_type_bookmark: str | None = Field(default=None, index=True)
-    nm_subtype_bookmark: str | None = Field(default=None, index=True)    
+    nm_subtype_bookmark: str | None = Field(default=None, index=True) 
+    nm_bookmark: str = Field(index=True) # Não é mais PK, mas um índice é bom para buscas.
+    ds_bookmark: str | None = Field(default=None)   
     nm_grouping: str | None = Field(default=None, index=True)
     nm_group_bookmark: str | None = Field(default=None, index=True)
     nm_subgroup_bookmark: str | None = Field(default=None, index=True)
