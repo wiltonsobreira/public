@@ -1,10 +1,10 @@
 -- BACKUP TABLE
-DROP TABLE bookmark_bkp_01;
+DROP TABLE tm_bookmark_bkp_01;
 
-ALTER TABLE bookmark RENAME TO bookmark_bkp_01;
+ALTER TABLE tm_bookmark RENAME TO tm_bookmark_bkp_01;
 
 -- DROP TABLE
-DROP TABLE bookmark;
+DROP TABLE tm_bookmark;
 
 -- CREATE TABLE tm_bookmark
 CREATE TABLE tm_bookmark (
@@ -19,7 +19,7 @@ CREATE TABLE tm_bookmark (
 	url_bookmark VARCHAR NOT NULL,
 	ts_created DATETIME DEFAULT CURRENT_TIMESTAMP, 
 	ts_updated DATETIME DEFAULT CURRENT_TIMESTAMP, 
-	PRIMARY KEY (nm_bookmark)
+	PRIMARY KEY (url_bookmark)
 );
 
 CREATE INDEX ix_bookmark_nm_type_bookmark ON tm_bookmark (nm_type_bookmark);
@@ -216,3 +216,6 @@ SELECT
 UNION
 SELECT
   'anki' as nm_subgroup_bookmark    
+  
+  
+SELECT * FROM   tm_bookmark

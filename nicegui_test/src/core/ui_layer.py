@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, cast, get_args, get_origin
+import re
+from typing import Any, Type, cast, get_args, get_origin
 
 from nicegui import events, ui
 from sqlmodel import SQLModel, Field
@@ -22,28 +23,6 @@ class GenericCatalogUI:
             raise ValueError(f"O modelo {model.__name__} não possui chave primária.")
         # Pega o nome da primeira coluna da chave primária
         self.primary_key_field = list(pk_cols)[0].name
-
-        self._setup_ui()
-
-    def _setup_ui(self):
-        """Configura todos os elementos da interface."""
-        # Obtém o objeto dark_mode para registrar um callback.
-        dark = ui.dark_mode()
-        dark.enable()
-
-        # Busca as opções para os comboboxes e armazena na instância.
-        # Isso permite que tanto os botões CRUD quanto a grade usem as mesmas opções.
-        from data_layer import (
-            TypeBookmark, SubtypeBookmark, GroupingBookmark, GroupBookmark, SubgroupBookmark
-        )
-        self.type_options = self.db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
-        self.subtype_options = self.db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
-        self.grouping_options = self.db.get_all_from_column(GroupingBookmark, "nm_grouping")
-        self.group_options = self.db.get_all_from_column(GroupBookmark, "nm_group_bookmark")
-        self.subgroup_options = self.db.get_all_from_column(SubgroupBookmark, "nm_subgroup_bookmark")
-
-        self._create_crud_buttons()
-        self.grid = self._create_grid()
 
     def _create_grid(self) -> ui.aggrid:
         """Cria e configura a AG Grid dinamicamente a partir do modelo."""
@@ -212,8 +191,15 @@ class GenericCatalogUI:
                 await ui.notify("Selecione ao menos um registro.", color="negative")
                 return
 
+            # Extrai a URL pura do link HTML se a PK for a url_bookmark
+            def extract_url(value: str) -> str:
+                if self.primary_key_field == "url_bookmark" and value.startswith('<a href="'):
+                    match = re.search(r'href="([^"]+)"', value)
+                    return match.group(1) if match else value
+                return value
+
             ids_to_delete = [
-                row[self.primary_key_field]
+                extract_url(row[self.primary_key_field])
                 for row in selected_rows
                 if self.primary_key_field in row
             ]
@@ -252,17 +238,24 @@ class GenericCatalogUI:
             field_type = self.model.model_fields[field].annotation
             new_value = self._convert_type(new_value, field_type)
 
+            # Extrai a URL pura do link HTML se a PK for a url_bookmark
+            def extract_url(value: str) -> str:
+                if self.primary_key_field == "url_bookmark" and value.startswith('<a href="'):
+                    match = re.search(r'href="([^"]+)"', value)
+                    return match.group(1) if match else value
+                return value
+
             # Lógica para lidar com a atualização da chave primária
             if field == self.primary_key_field:
                 with self.db.get_session() as session:
                     # Exclui o registro antigo
-                    old_item = session.get(self.model, old_value)
+                    old_item = session.get(self.model, extract_url(old_value))
                     if old_item:
                         session.delete(old_item)
 
                     # Cria um novo registro com a nova PK
                     new_data = row.copy()
-                    new_data[self.primary_key_field] = new_value
+                    new_data[self.primary_key_field] = extract_url(new_value)
                     # Remove os campos de timestamp, pois eles serão gerados automaticamente
                     # pelo banco de dados para o novo registro.
                     new_data.pop("ts_created", None)
@@ -275,7 +268,7 @@ class GenericCatalogUI:
             else:
                 # Lógica para atualizar outros campos
                 with self.db.get_session() as session:
-                    item = session.get(self.model, row[self.primary_key_field])
+                    item = session.get(self.model, extract_url(row[self.primary_key_field]))
                     if not item:
                         await ui.notify("Registro não encontrado.", color="negative")
                         self.refresh_grid()
@@ -306,3 +299,32 @@ class GenericCatalogUI:
 
         # Se não for uma união, converte diretamente
         return target_type(value)
+
+
+def create_catalog_ui(db: Database, model: Type[SQLModel]):
+    """
+    Cria e orquestra a interface do usuário completa.
+    Esta função atua como o ponto de entrada para a construção da UI.
+    """
+    catalog = GenericCatalogUI(db, model)
+
+    dark = ui.dark_mode()
+    dark.enable()
+
+    from data_layer import (
+        TypeBookmark, SubtypeBookmark, GroupingBookmark, GroupBookmark, SubgroupBookmark
+    )
+    catalog.type_options = db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
+    catalog.subtype_options = db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
+    catalog.grouping_options = db.get_all_from_column(GroupingBookmark, "nm_grouping")
+    catalog.group_options = db.get_all_from_column(GroupBookmark, "nm_group_bookmark")
+    catalog.subgroup_options = db.get_all_from_column(SubgroupBookmark, "nm_subgroup_bookmark")
+
+    catalog._create_crud_buttons()
+    catalog.grid = catalog._create_grid()
+
+    def force_light_theme_on_grid():
+        catalog.grid.classes(remove='ag-theme-alpine-dark', add='ag-theme-quartz')
+
+    dark.on('update', force_light_theme_on_grid)
+    force_light_theme_on_grid()
