@@ -28,13 +28,9 @@ class GenericCatalogUI:
     def _setup_ui(self):
         """Configura todos os elementos da interface."""
         ui.dark_mode().enable()
-
-        with ui.row().classes("items-center justify-between w-full"):
-            ui.label(f"{self.model.__name__}s").classes("text-2xl font-bold")
-            self.status_label = ui.label("").classes("text-sm opacity-80")
-
-        self.grid = self._create_grid()
+ 
         self._create_crud_buttons()
+        self.grid = self._create_grid()
 
     def _create_grid(self) -> ui.aggrid:
         """Cria e configura a AG Grid dinamicamente a partir do modelo."""
@@ -58,7 +54,7 @@ class GenericCatalogUI:
 
         # Usa o argumento `html_columns` para instruir a grade a renderizar HTML.
         html_columns = [url_col_index] if url_col_index != -1 else []
-        grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full h-[90vh]") # 90vh é valor percentual da tela verticalmente 
+        grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full h-[83vh]") # 90vh é valor percentual da tela verticalmente 
 
         grid.on(
             "cellValueChanged",
@@ -90,7 +86,7 @@ class GenericCatalogUI:
 
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
-        with ui.row().classes("gap-2 my-2"):
+        with ui.row().classes("gap-2 my-4 items-center w-full"):
             # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
                 if "ts_" not in name:
@@ -98,11 +94,13 @@ class GenericCatalogUI:
                         label=name.replace("_", " ").capitalize()
                     ).classes("w-56")
 
-            ui.button("Adicionar", on_click=self._add_row, color="primary")
+            ui.button("Add", on_click=self._add_row, color="primary")
             ui.button(
-                "Excluir selecionados", on_click=self._delete_selected, color="negative"
+                "Delete", on_click=self._delete_selected, color="negative"
             )
-            ui.button("Recarregar", on_click=self.refresh_grid)
+            # ui.button("Recarregar", on_click=self.refresh_grid)
+            ui.space()
+            self.status_label = ui.label("").classes("text-sm opacity-80")
 
     def refresh_grid(self):
         """Atualiza os dados da grid buscando do banco."""
