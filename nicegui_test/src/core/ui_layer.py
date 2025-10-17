@@ -31,11 +31,18 @@ class GenericCatalogUI:
         dark = ui.dark_mode()
         dark.enable()
 
+        # Busca as opções para os comboboxes e armazena na instância.
+        # Isso permite que tanto os botões CRUD quanto a grade usem as mesmas opções.
+        from data_layer import TypeBookmark, SubtypeBookmark
+        self.type_options = self.db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
+        self.subtype_options = self.db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
+
         self._create_crud_buttons()
         self.grid = self._create_grid()
 
     def _create_grid(self) -> ui.aggrid:
         """Cria e configura a AG Grid dinamicamente a partir do modelo."""
+
         # Prepara as definições de coluna e os dados.
         col_defs = self._generate_col_defs()
         rows = self._get_formatted_rows()
@@ -79,6 +86,15 @@ class GenericCatalogUI:
             }
             if name == pk_name:
                 col_def["width"] = 150
+            
+            # Configura o editor de célula como um dropdown para tipo e subtipo.
+            if name == "nm_type_bookmark":
+                col_def["cellEditor"] = "agSelectCellEditor"
+                col_def["cellEditorParams"] = {"values": self.type_options}
+            elif name == "nm_subtype_bookmark":
+                col_def["cellEditor"] = "agSelectCellEditor"
+                col_def["cellEditorParams"] = {"values": self.subtype_options}
+
             # A renderização do link agora é tratada por `html_columns`, não precisamos mais de cellRenderer.
 
             if field_info.annotation in (float, int):
@@ -88,12 +104,6 @@ class GenericCatalogUI:
 
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
-        # Busca as opções para os comboboxes de tipo e subtipo.
-        # O modelo é importado dinamicamente para evitar dependência circular.
-        from data_layer import TypeBookmark, SubtypeBookmark
-        type_options = self.db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
-        subtype_options = self.db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
-
         with ui.row().classes("gap-2 my-4 items-center w-full flex-nowrap overflow-x-auto"):
             # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
@@ -101,11 +111,11 @@ class GenericCatalogUI:
                     label = name.replace("_", " ").capitalize()
                     if name == "nm_type_bookmark":
                         self.input_fields[name] = ui.select(
-                            options=type_options, label=label
+                            options=self.type_options, label=label
                         ).classes("w-48")
                     elif name == "nm_subtype_bookmark":
                         self.input_fields[name] = ui.select(
-                            options=subtype_options, label=label
+                            options=self.subtype_options, label=label
                         ).classes("w-48")
                     else:
                         self.input_fields[name] = ui.input(label=label).classes("w-48")
