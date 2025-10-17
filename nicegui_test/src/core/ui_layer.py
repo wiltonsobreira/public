@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, cast, get_args, get_origin
 
 from nicegui import events, ui
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Field
 
 from data_layer import Database
 
@@ -88,13 +88,27 @@ class GenericCatalogUI:
 
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
+        # Busca as opções para os comboboxes de tipo e subtipo.
+        # O modelo é importado dinamicamente para evitar dependência circular.
+        from data_layer import TypeBookmark, SubtypeBookmark
+        type_options = self.db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
+        subtype_options = self.db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
+
         with ui.row().classes("gap-2 my-4 items-center w-full flex-nowrap overflow-x-auto"):
             # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
                 if "ts_" not in name:
-                    self.input_fields[name] = ui.input(
-                        label=name.replace("_", " ").capitalize()
-                    ).classes("w-48")
+                    label = name.replace("_", " ").capitalize()
+                    if name == "nm_type_bookmark":
+                        self.input_fields[name] = ui.select(
+                            options=type_options, label=label
+                        ).classes("w-48")
+                    elif name == "nm_subtype_bookmark":
+                        self.input_fields[name] = ui.select(
+                            options=subtype_options, label=label
+                        ).classes("w-48")
+                    else:
+                        self.input_fields[name] = ui.input(label=label).classes("w-48")
 
             ui.button("Add", on_click=self._add_row, color="primary")
             ui.button(
