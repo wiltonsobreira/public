@@ -154,3 +154,65 @@ SELECT
 -- favorites/website/page
 -- favorites/website/post
 -- file (other formats)
+  
+  
+  
+  -- CREATE TABLE tc_grouping_bookmark
+CREATE TABLE tc_grouping_bookmark (
+	nm_grouping VARCHAR NOT NULL,
+	ts_created DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	ts_updated DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	PRIMARY KEY (nm_grouping)
+);
+
+-- INSERT tc_grouping_bookmark
+INSERT INTO tc_grouping_bookmark
+(
+  nm_grouping
+)
+SELECT
+  'tab_01' as nm_grouping
+UNION
+SELECT
+  'tab_02' as nm_grouping
+  
+  
+  -- CREATE TABLE tc_group_bookmark
+CREATE TABLE tc_group_bookmark (
+	nm_group_bookmark VARCHAR NOT NULL,
+	ts_created DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	ts_updated DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	PRIMARY KEY (nm_group_bookmark)
+);
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'saude' as nm_group_bookmark
+UNION
+SELECT
+  'idiomas' as nm_group_bookmark  
+
+  
+  
+  -- CREATE TABLE tc_subgroup_bookmark
+CREATE TABLE tc_subgroup_bookmark (
+	nm_subgroup_bookmark VARCHAR NOT NULL,
+	ts_created DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	ts_updated DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	PRIMARY KEY (nm_subgroup_bookmark)
+);
+
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'rede_credenciada' as nm_subgroup_bookmark
+UNION
+SELECT
+  'anki' as nm_subgroup_bookmark    

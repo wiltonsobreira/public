@@ -33,9 +33,14 @@ class GenericCatalogUI:
 
         # Busca as opções para os comboboxes e armazena na instância.
         # Isso permite que tanto os botões CRUD quanto a grade usem as mesmas opções.
-        from data_layer import TypeBookmark, SubtypeBookmark
+        from data_layer import (
+            TypeBookmark, SubtypeBookmark, GroupingBookmark, GroupBookmark, SubgroupBookmark
+        )
         self.type_options = self.db.get_all_from_column(TypeBookmark, "nm_type_bookmark")
         self.subtype_options = self.db.get_all_from_column(SubtypeBookmark, "nm_subtype_bookmark")
+        self.grouping_options = self.db.get_all_from_column(GroupingBookmark, "nm_grouping")
+        self.group_options = self.db.get_all_from_column(GroupBookmark, "nm_group_bookmark")
+        self.subgroup_options = self.db.get_all_from_column(SubgroupBookmark, "nm_subgroup_bookmark")
 
         self._create_crud_buttons()
         self.grid = self._create_grid()
@@ -94,6 +99,15 @@ class GenericCatalogUI:
             elif name == "nm_subtype_bookmark":
                 col_def["cellEditor"] = "agSelectCellEditor"
                 col_def["cellEditorParams"] = {"values": self.subtype_options}
+            elif name == "nm_grouping":
+                col_def["cellEditor"] = "agSelectCellEditor"
+                col_def["cellEditorParams"] = {"values": self.grouping_options}
+            elif name == "nm_group_bookmark":
+                col_def["cellEditor"] = "agSelectCellEditor"
+                col_def["cellEditorParams"] = {"values": self.group_options}
+            elif name == "nm_subgroup_bookmark":
+                col_def["cellEditor"] = "agSelectCellEditor"
+                col_def["cellEditorParams"] = {"values": self.subgroup_options}
 
             # A renderização do link agora é tratada por `html_columns`, não precisamos mais de cellRenderer.
 
@@ -116,6 +130,18 @@ class GenericCatalogUI:
                     elif name == "nm_subtype_bookmark":
                         self.input_fields[name] = ui.select(
                             options=self.subtype_options, label=label
+                        ).classes("w-48")
+                    elif name == "nm_grouping":
+                        self.input_fields[name] = ui.select(
+                            options=self.grouping_options, label=label, with_input=True
+                        ).classes("w-48")
+                    elif name == "nm_group_bookmark":
+                        self.input_fields[name] = ui.select(
+                            options=self.group_options, label=label, with_input=True
+                        ).classes("w-48")
+                    elif name == "nm_subgroup_bookmark":
+                        self.input_fields[name] = ui.select(
+                            options=self.subgroup_options, label=label, with_input=True
                         ).classes("w-48")
                     else:
                         self.input_fields[name] = ui.input(label=label).classes("w-48")

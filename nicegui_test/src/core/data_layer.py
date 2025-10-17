@@ -53,6 +53,33 @@ class SubtypeBookmark(SQLModel, table=True):
     ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
 
 
+class GroupingBookmark(SQLModel, table=True):
+    """Define o modelo para os agrupamentos de bookmark (tabela de lookup)."""
+    __tablename__ = "tc_grouping_bookmark"
+    __table_args__ = {"extend_existing": True}
+
+    nm_grouping: str = Field(primary_key=True)
+    ts_created: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
+    ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
+
+class GroupBookmark(SQLModel, table=True):
+    """Define o modelo para os grupos de bookmark (tabela de lookup)."""
+    __tablename__ = "tc_group_bookmark"
+    __table_args__ = {"extend_existing": True}
+
+    nm_group_bookmark: str = Field(primary_key=True)
+    ts_created: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
+    ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
+
+class SubgroupBookmark(SQLModel, table=True):
+    """Define o modelo para os subgrupos de bookmark (tabela de lookup)."""
+    __tablename__ = "tc_subgroup_bookmark"
+    __table_args__ = {"extend_existing": True}
+
+    nm_subgroup_bookmark: str = Field(primary_key=True)
+    ts_created: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP")))
+    ts_updated: datetime = Field(default_factory=datetime.now, sa_column=Column(DateTime, server_default=text("CURRENT_TIMESTAMP"), onupdate=datetime.now))
+
 class Database:
     """Gerencia a conexão e as operações CRUD com o banco de dados."""
 
@@ -128,6 +155,24 @@ class Database:
                     SubtypeBookmark(nm_subtype_bookmark='post'),
                     SubtypeBookmark(nm_subtype_bookmark='profile'),
                     SubtypeBookmark(nm_subtype_bookmark='domain'),
+                ])
+
+            if not session.exec(select(GroupingBookmark)).first():  # Popula groupings
+                session.add_all([
+                    GroupingBookmark(nm_grouping='tab_01'),
+                    GroupingBookmark(nm_grouping='tab_02'),
+                ])
+
+            if not session.exec(select(GroupBookmark)).first():  # Popula groups
+                session.add_all([
+                    GroupBookmark(nm_group_bookmark='saude'),
+                    GroupBookmark(nm_group_bookmark='idiomas'),
+                ])
+
+            if not session.exec(select(SubgroupBookmark)).first():  # Popula subgroups
+                session.add_all([
+                    SubgroupBookmark(nm_subgroup_bookmark='rede_credenciada'),
+                    SubgroupBookmark(nm_subgroup_bookmark='anki'),
                 ])
 
             session.commit()
