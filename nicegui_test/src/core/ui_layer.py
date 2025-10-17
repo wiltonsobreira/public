@@ -27,8 +27,10 @@ class GenericCatalogUI:
 
     def _setup_ui(self):
         """Configura todos os elementos da interface."""
-        ui.dark_mode().enable()
- 
+        # Obtém o objeto dark_mode para registrar um callback.
+        dark = ui.dark_mode()
+        dark.enable()
+
         self._create_crud_buttons()
         self.grid = self._create_grid()
 
@@ -55,7 +57,7 @@ class GenericCatalogUI:
         # Usa o argumento `html_columns` para instruir a grade a renderizar HTML.
         html_columns = [url_col_index] if url_col_index != -1 else []
         grid = ui.aggrid(grid_options, html_columns=html_columns).classes("w-full h-[83vh]") # 90vh é valor percentual da tela verticalmente 
-
+        
         grid.on(
             "cellValueChanged",
             self._on_cell_value_changed,
@@ -86,13 +88,13 @@ class GenericCatalogUI:
 
     def _create_crud_buttons(self):
         """Cria os campos de entrada e botões para as operações CRUD."""
-        with ui.row().classes("gap-2 my-4 items-center w-full"):
+        with ui.row().classes("gap-2 my-4 items-center w-full flex-nowrap overflow-x-auto"):
             # Gera campos de input dinamicamente, exceto para timestamps
             for name, _ in self.model.model_fields.items():
                 if "ts_" not in name:
                     self.input_fields[name] = ui.input(
                         label=name.replace("_", " ").capitalize()
-                    ).classes("w-56")
+                    ).classes("w-48")
 
             ui.button("Add", on_click=self._add_row, color="primary")
             ui.button(
