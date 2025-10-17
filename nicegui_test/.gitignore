@@ -212,6 +212,9 @@ bkp*
 *cookies*
 output_files
 
+# Additional folders and files
+version_*
+
 # sqlite db
-app.db-shm
-app.db-wal
+wsorg.db-shm
+wsorg.db-wal
