@@ -48,7 +48,7 @@ class GenericCatalogUI:
 
         # Encontra o índice da coluna de URL para passar para html_columns.
         try:
-            url_col_index = next(i for i, col in enumerate(col_defs) if col["field"] == "url_bookmark")
+            url_col_index = next(i for i, col in enumerate(col_defs) if col.get("field") == "url_bookmark")
         except StopIteration:
             url_col_index = -1 # Coluna não encontrada
 
@@ -75,7 +75,18 @@ class GenericCatalogUI:
 
     def _generate_col_defs(self) -> list[dict[str, Any]]:
         """Gera definições de coluna para a AG Grid a partir dos campos do modelo."""
-        col_defs = []
+        # Adiciona uma coluna para o número da linha no início.
+        col_defs = [
+            {
+                "headerName": "#",
+                "valueGetter": "node.rowIndex + 1",  # Expressão da AG Grid para obter o índice da linha.
+                "width": 70,
+                "pinned": "left",  # Fixa a coluna à esquerda.
+                "editable": False,
+                "sortable": False,
+                "filter": False,
+            }
+        ]
         pk_name = self.primary_key_field
         for name, field_info in self.model.model_fields.items():
             display_name = FIELD_LABELS.get(name, name.replace("_", " ").capitalize())
