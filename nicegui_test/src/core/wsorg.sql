@@ -97,6 +97,20 @@ SELECT
   'file' as nm_type_bookmark
 
 
+-- INSERT tc_type_bookmark
+INSERT INTO tc_type_bookmark
+(
+  nm_type_bookmark
+)
+SELECT
+  'book' as nm_type_bookmark  
+  UNION
+SELECT
+  'course' as nm_type_bookmark  
+
+  
+  
+  
   
 -- CREATE TABLE tc_subtype_bookmark
 CREATE TABLE tc_subtype_bookmark (
@@ -136,6 +150,9 @@ SELECT
   'domain' as nm_subtype_bookmark
 
 
+  
+  
+  
 
 -- All type of favorites
 
@@ -185,6 +202,7 @@ CREATE TABLE tc_group_bookmark (
 	PRIMARY KEY (nm_group_bookmark)
 );
 
+
 -- INSERT tc_group_bookmark
 INSERT INTO tc_group_bookmark
 (
@@ -196,6 +214,149 @@ UNION
 SELECT
   'idiomas' as nm_group_bookmark  
 
+DELETE FROM tc_group_bookmark
+WHERE nm_group_bookmark IN ('saude', 'idiomas')
+  
+  
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'language' as nm_group_bookmark
+  
+  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'programming' as nm_group_bookmark  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'ai' as nm_group_bookmark    
+  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'translator' as nm_group_bookmark     
+
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'nutrition' as nm_group_bookmark
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'investiment' as nm_group_bookmark
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'presentation' as nm_group_bookmark  
+  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'image' as nm_group_bookmark    
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'medical' as nm_group_bookmark    
+  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'it' as nm_group_bookmark     
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'travel' as nm_group_bookmark    
+  
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'communication' as nm_group_bookmark    
+
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'barbershop' as nm_group_bookmark
+  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'tv_serie' as nm_group_bookmark  
+UNION
+SELECT
+  'movie' as nm_group_bookmark   
+
+  
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'download' as nm_group_bookmark  
+
+-- INSERT tc_group_bookmark
+INSERT INTO tc_group_bookmark
+(
+  nm_group_bookmark
+)
+SELECT
+  'cloud' as nm_group_bookmark    
   
   
   -- CREATE TABLE tc_subgroup_bookmark
@@ -216,6 +377,110 @@ SELECT
 UNION
 SELECT
   'anki' as nm_subgroup_bookmark    
+  
+DELETE FROM tc_subgroup_bookmark
+WHERE nm_subgroup_bookmark IN ('rede_credenciada', 'anki')
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'web' as nm_subgroup_bookmark  
+  
+
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'ai' as nm_subgroup_bookmark    
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'tool' as nm_subgroup_bookmark      
+
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'recipe' as nm_subgroup_bookmark
+  
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'edition' as nm_subgroup_bookmark
+
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'insurance' as nm_subgroup_bookmark  
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'learning' as nm_subgroup_bookmark    
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'documentation' as nm_subgroup_bookmark
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'article' as nm_subgroup_bookmark
+  
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'scheduling' as nm_subgroup_bookmark    
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'etf' as nm_subgroup_bookmark      
+  
+-- INSERT tc_subgroup_bookmark
+INSERT INTO tc_subgroup_bookmark
+(
+  nm_subgroup_bookmark
+)
+SELECT
+  'provider' as nm_subgroup_bookmark        
+  
   
   
 SELECT * FROM   tm_bookmark
