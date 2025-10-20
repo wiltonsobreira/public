@@ -219,3 +219,4 @@ version_*
 wsorg.db-shm
 wsorg.db-wal
 wsorg_bkp_*
+wsorg.db

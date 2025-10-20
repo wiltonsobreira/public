@@ -80,7 +80,7 @@ class GenericCatalogUI:
             {
                 "headerName": "#",
                 "valueGetter": "node.rowIndex + 1",  # Expressão da AG Grid para obter o índice da linha.
-                "width": 70,
+                "width": 77,
                 "pinned": "left",  # Fixa a coluna à esquerda.
                 "editable": False,
                 "sortable": False,
